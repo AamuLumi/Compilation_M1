@@ -1,10 +1,11 @@
 import java_cup.runtime.*;
 
 %%
-%class CalculetteLexer
+
+%class PatateCompilateurLexer
 %line
 %column
-%cupsym CalculetteSymbol
+%cupsym PatateCompilateurSymbol
 %cup
 
 %{
@@ -26,18 +27,19 @@ nb      = 0|[1-9][0-9]*
         Separateurs Operateurs
    ------------------------------------------------- */
 
-"("      { return symbol(CalculetteSymbol.LPAR); }
-")"      { return symbol(CalculetteSymbol.RPAR); }
-"+"    { return symbol(CalculetteSymbol.PLUS); }
-"*"      { return symbol(CalculetteSymbol.MULT); }
-";"      { return symbol(CalculetteSymbol.SEMIC); }
+"("      { return symbol(PatateCompilateurSymbol.LPAR); }
+")"      { return symbol(PatateCompilateurSymbol.RPAR); }
+"+"    { return symbol(PatateCompilateurSymbol.PLUS); }
+"*"      { return symbol(PatateCompilateurSymbol.MULT); }
+";"      { return symbol(PatateCompilateurSymbol.SEMIC); }
+"integer" { return symbol(PatateCompilateurSymbol.INT); }
 
 /* -------------------------------------------------
         Variables, Entiers
    ------------------------------------------------- */
 
 
-{id}     { return symbol(CalculetteSymbol.ID); }
+{id}     { return symbol(PatateCompilateurSymbol.ID); }
  /* -------------------------------------------------
         Caracteres non pris en compte
    ------------------------------------------------- */
@@ -48,3 +50,5 @@ nb      = 0|[1-9][0-9]*
         Erreurs
    ------------------------------------------------- */
 . {}
+
+  
