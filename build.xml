@@ -75,6 +75,7 @@ Basé sur les travaux de Lionel Clément
     <delete file="${src.dir}/PatateCompilateurLexer.java"/>
     <delete file="${src.dir}/PatateCompilateurParser.java"/>
     <delete file="${src.dir}/PatateCompilateurSymbol.java"/>
+    <delete file="Output.txt"/>
     <delete dir="${bin.dir}"/>
   </target>
 
