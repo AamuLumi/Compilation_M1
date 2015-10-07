@@ -62,7 +62,7 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "["      { return symbol(PatateCompilateurSymbol.LBRA); }
 "]"      { return symbol(PatateCompilateurSymbol.RBRA); }
 "."      { return symbol(PatateCompilateurSymbol.POINT); }
-"->"     { return symbol(PatateCompilateurSymbol.ARRAW); }
+"->"     { return symbol(PatateCompilateurSymbol.ARROW); }
 "'"       { return symbol(PatateCompilateurSymbol.SINGLEQUOTE); }
 """ //"   { return symbol(PatateCompilateurSymbol.QUOTE); }
 ":"       { return symbol(PatateCompilateurSymbol.COLON); }
@@ -109,8 +109,8 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 {nb}     { return symbol(PatateCompilateurSymbol.NB); }
 {nbv}    { return symbol(PatateCompilateurSymbol.NBV); }
 
-"//".*    
-"/*"([^*]|\*+[^/])*\*+"/"
+"//".*    { return symbol(PatateCompilateurSymbol.SINGLESTRING); }
+"/*"([^*]|\*+[^/])*\*+"/" { return symbol(PatateCompilateurSymbol.STRINGS); }
 
  /* -------------------------------------------------
         Caracteres non pris en compte
