@@ -34,16 +34,14 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "+"    	 { return symbol(PatateCompilateurSymbol.PLUS); }
 "*"      { return symbol(PatateCompilateurSymbol.MULT); }
 ";"      { return symbol(PatateCompilateurSymbol.SEMIC); }
-","       { return symbol(PatateCompilateurSymbol.VIRGULE); }
+","       { return symbol(PatateCompilateurSymbol.COMA); }
 "{"	     { return symbol(PatateCompilateurSymbol.LACC); }
 "}"	     { return symbol(PatateCompilateurSymbol.RACC); }
-"+ unaire"  { return symbol(PatateCompilateurSymbol.PLUSUNAIRE); }
-"- unaire"  { return symbol(PatateCompilateurSymbol.MOINSUNAIRE); }
 "++"	   { return symbol(PatateCompilateurSymbol.INC_OP); }
 "--"	   { return symbol(PatateCompilateurSymbol.DEC_OP); }
 "&"	     { return symbol(PatateCompilateurSymbol.AND); }
-"-"	     { return symbol(PatateCompilateurSymbol.MOINS); }
-"~"	     { return symbol(PatateCompilateurSymbol.TILD); }
+"-"	     { return symbol(PatateCompilateurSymbol.MINUS); }
+"~"	     { return symbol(PatateCompilateurSymbol.TILDE); }
 "!"	     { return symbol(PatateCompilateurSymbol.NE); }
 "/"	     { return symbol(PatateCompilateurSymbol.DIV); }
 "%"	     { return symbol(PatateCompilateurSymbol.MOD); }
@@ -61,13 +59,13 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "||"	   { return symbol(PatateCompilateurSymbol.OR_OP); }
 "="	     { return symbol(PatateCompilateurSymbol.EQ); }
 "(op)="	   { return symbol(PatateCompilateurSymbol.OP_ASSIGN); }
-"["      { return symbol(PatateCompilateurSymbol.LCRO); }
-"]"      { return symbol(PatateCompilateurSymbol.RCRO); }
+"["      { return symbol(PatateCompilateurSymbol.LBRA); }
+"]"      { return symbol(PatateCompilateurSymbol.RBRA); }
 "."      { return symbol(PatateCompilateurSymbol.POINT); }
-"->"     { return symbol(PatateCompilateurSymbol.RMOINS); }
-"'"       { return symbol(PatateCompilateurSymbol.AP); }
+"->"     { return symbol(PatateCompilateurSymbol.ARRAW); }
+"'"       { return symbol(PatateCompilateurSymbol.SINGLEQUOTE); }
 """ //"   { return symbol(PatateCompilateurSymbol.QUOTE); }
-":"       { return symbol(PatateCompilateurSymbol.POINTS); }
+":"       { return symbol(PatateCompilateurSymbol.COLON); }
 
 "integer" { return symbol(PatateCompilateurSymbol.INT); }
 "character"   { return symbol(PatateCompilateurSymbol.CHARACTER); }
@@ -111,15 +109,16 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 {nb}     { return symbol(PatateCompilateurSymbol.NB); }
 {nbv}    { return symbol(PatateCompilateurSymbol.NBV); }
 
+"//".*    
+"/*"([^*]|\*+[^/])*\*+"/"
+
  /* -------------------------------------------------
         Caracteres non pris en compte
    ------------------------------------------------- */
 
 [\t|\n|\r|\r\n]                  {}
 
-"//".*    
-"/*"([^*]|\*+[^/])*\*+"/"   
-
+   
 /* -------------------------------------------------
         Erreurs
    ------------------------------------------------- */
