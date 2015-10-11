@@ -1,1 +1,115 @@
-a+b*(c+d) + e*(f+a*g)*(x+yy);
+procedure main(argn: integer, argc: list of string)
+{
+  x: integer;
+  y: integer;
+
+  otherVariable: list of string;
+  var2: structure{
+    x1: integer;
+    x2: float;
+  };
+
+  x=2;
+  y=x+1;
+  addOne(x);
+}
+
+procedure addOne(n:integer){
+  return x+1;
+}
+
+procedure isPositiveOptimized(n:integer){
+  return n>0;
+}
+
+procedure isPositive(n:integer){
+  if (n>0) return true;
+  return false;
+}
+
+procedure isPositiveLong(n:integer){
+  if (n>0){
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+procedure isPositiveHybrid(n:integer){
+  if (n>0) {
+    return true;
+  }
+  else
+    return false;
+}
+
+procedure isPositiveHybrid2(n:integer){
+  if (n>0)
+    return true;
+  else {
+    return false;
+  }
+}
+
+procedure countTimes(n:integer){
+  i:integer;
+  i=0;
+  while (i++<n)
+    show(i);
+}
+
+procedure showNumbersIn(l:list of integer){
+  foreach n in l
+    show(n);
+}
+
+procedure specialIf(x:integer){
+  if (x < 4)
+    if (x < 2)
+      return x;
+    else
+      return 0;
+
+  return -x;
+}
+
+procedure useOfLitteralList(){
+  l:list of integer;
+  l = [0, 2, 4];
+
+  return l;
+}
+
+procedure forEachWithLitteralList(){
+  x : list of integer;
+  x = [1, 3, 5, 7];
+  foreach n in [0,1,2,3]
+    show(x[n]);
+}
+
+class MyClass {
+  static x: integer;
+  static y: integer;
+  aString : string;
+
+  MyClass(){
+    aString=null;
+  }
+
+  MyClass(s:string){
+    aString = s;
+  }
+
+  ~MyClass(){
+
+  }
+
+  function getX() : integer {
+    return MyClass.x;
+  }
+
+  function getAString() : string {
+    return this.aString;
+  }
+}

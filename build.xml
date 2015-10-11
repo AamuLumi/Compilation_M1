@@ -25,7 +25,7 @@ Basé sur les travaux de Lionel Clément
        ================================= -->
   <target depends="PatateCompilateur" description="Compilation de PatateCompilateur" name="default">
 
-    <java classname="Main" classpath=".:${bin.dir}:${lib.dir}/java-cup-11a-runtime.jar" output="Output.txt">
+    <java classname="Main" classpath=".:${bin.dir}:${lib.dir}/java-cup-11a-runtime.jar">
       <arg value="Essai.txt"/>
     </java>
 
@@ -66,11 +66,11 @@ Basé sur les travaux de Lionel Clément
     <cup destdir="${src.dir}" dump_grammar="true" parser="PatateCompilateurParser" srcfile="${parser.dir}/patateCompilateur.cup" symbols="PatateCompilateurSymbol"/>
   </target>
 
-  <!-- =================================
+<!-- =================================
          target: clean
          ================================= -->
 
-  <target name="clean" description="Nettoyage du répertoire">
+  <target description="Nettoyage du répertoire" name="clean">
 
     <delete file="${src.dir}/PatateCompilateurLexer.java"/>
     <delete file="${src.dir}/PatateCompilateurParser.java"/>
