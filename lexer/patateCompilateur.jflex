@@ -1,5 +1,5 @@
 import java_cup.runtime.*;
-
+import java.util.Stack;
 %%
 
 %class PatateCompilateurLexer
@@ -9,18 +9,65 @@ import java_cup.runtime.*;
 %cup
 
 %{
+/* On ajoute 1 à la ligne et la colonne car un éditeur de texte commence
+  à la ligne 1 et la colonne 1, tandis que le lexeur commence à 0:0.
+  */
 private Symbol symbol (int type) {
-        return new Symbol (type, yyline, yycolumn);
+        return new Symbol (type, yyline+1, yycolumn+1);
 }
 
 private Symbol symbol (int type, Object value) {
-        return new Symbol (type, yyline, yycolumn, value);
+        return new Symbol (type, yyline+1, yycolumn+1, value);
 }
-%}
+
+public class Pile{
+
+  Stack<Character> s = new Stack<Character>();
+
+  public Pile(){
+
+  }
+
+  public boolean isOpeningSymbol(char c)
+  {
+    return c == '(' || c == '{' || c == '[';
+  }
+
+  public boolean isClosingSymbol(char c)
+  {
+    return c == ')' || c == '}' || c == ']';
+  }
+
+  public void checkMismatch(char c)
+  {
+    if (isOpeningSymbol(c))
+      s.push(c);
+
+    else if (isClosingSymbol(c))
+    {
+      try
+      {
+        if ((c == ')' && s.peek() == '(') ||
+            (c == '}' && s.peek() == '{') ||
+            (c == ']' && s.peek() == '['))
+        {
+          s.pop();
+        }
+        else throw new RuntimeException();
+      }catch(RuntimeException e)
+      {
+        System.out.println("Erreur " + c + yyline + yycolumn);
+      }
+    }
+  }
+}
+
+Pile p = new Pile();
+%};
 
 id      = [a-zA-Z][a-zA-Z0-9_]*
 nb      = 0|[1-9][0-9]*
-nbv     = 0|[1-9][0-9]*"."[0-9]* 
+nbv     = 0|[1-9][0-9]*"."[0-9]*
 
 %%
 
@@ -29,14 +76,18 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
         Separateurs Operateurs
    ------------------------------------------------- */
 
-"("      { return symbol(PatateCompilateurSymbol.LPAR); }
-")"      { return symbol(PatateCompilateurSymbol.RPAR); }
+"("      { p.checkMismatch(yytext().charAt(0));
+          return symbol(PatateCompilateurSymbol.LPAR); }
+")"      { p.checkMismatch(yytext().charAt(0));
+          return symbol(PatateCompilateurSymbol.RPAR); }
 "+"    	 { return symbol(PatateCompilateurSymbol.PLUS); }
 "*"      { return symbol(PatateCompilateurSymbol.MULT); }
 ";"      { return symbol(PatateCompilateurSymbol.SEMIC); }
-","       { return symbol(PatateCompilateurSymbol.COMA); }
-"{"	     { return symbol(PatateCompilateurSymbol.LACC); }
-"}"	     { return symbol(PatateCompilateurSymbol.RACC); }
+","       { return symbol(PatateCompilateurSymbol.COMMA); }
+"{"	     { p.checkMismatch(yytext().charAt(0));
+          return symbol(PatateCompilateurSymbol.LACC); }
+"}"	     { p.checkMismatch(yytext().charAt(0));
+          return symbol(PatateCompilateurSymbol.RACC); }
 "++"	   { return symbol(PatateCompilateurSymbol.INC_OP); }
 "--"	   { return symbol(PatateCompilateurSymbol.DEC_OP); }
 "&"	     { return symbol(PatateCompilateurSymbol.AND); }
@@ -58,9 +109,17 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "&&"	   { return symbol(PatateCompilateurSymbol.AND_OP); }
 "||"	   { return symbol(PatateCompilateurSymbol.OR_OP); }
 "="	     { return symbol(PatateCompilateurSymbol.EQ); }
-"(op)="	   { return symbol(PatateCompilateurSymbol.OP_ASSIGN); }
-"["      { return symbol(PatateCompilateurSymbol.LBRA); }
-"]"      { return symbol(PatateCompilateurSymbol.RBRA); }
+"+="	   { return symbol(PatateCompilateurSymbol.ADD_ASSIGN); }
+"-="	   { return symbol(PatateCompilateurSymbol.SUB_ASSIGN); }
+"*="	   { return symbol(PatateCompilateurSymbol.MUL_ASSIGN); }
+"/="	   { return symbol(PatateCompilateurSymbol.ADD_ASSIGN); }
+"%="	   { return symbol(PatateCompilateurSymbol.MOD_ASSIGN); }
+"&="	   { return symbol(PatateCompilateurSymbol.AND_ASSIGN); }
+"^="	   { return symbol(PatateCompilateurSymbol.XOR_ASSIGN); }
+"["      { p.checkMismatch(yytext().charAt(0));
+          return symbol(PatateCompilateurSymbol.LBRA); }
+"]"      { p.checkMismatch(yytext().charAt(0));
+          return symbol(PatateCompilateurSymbol.RBRA); }
 "."      { return symbol(PatateCompilateurSymbol.POINT); }
 "->"     { return symbol(PatateCompilateurSymbol.ARROW); }
 "'"       { return symbol(PatateCompilateurSymbol.SINGLEQUOTE); }
@@ -82,6 +141,7 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "structure"   { return symbol(PatateCompilateurSymbol.STRUCTURE); }
 "list of"   { return symbol(PatateCompilateurSymbol.LISTOF); }
 "if"        { return symbol(PatateCompilateurSymbol.IF); }
+"else"        { return symbol(PatateCompilateurSymbol.ELSE); }
 "stop"      { return symbol(PatateCompilateurSymbol.STOP); }
 "break"     { return symbol(PatateCompilateurSymbol.BREAK); }
 "repeat"    { return symbol(PatateCompilateurSymbol.REPEAT); }
@@ -90,7 +150,7 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "null"  { return symbol(PatateCompilateurSymbol.NULL); }
 "boolean"	   { return symbol(PatateCompilateurSymbol.BOOLEAN); }
 "true"  { return symbol(PatateCompilateurSymbol.TRUE); }
-"false"	   { return symbol(PatateCompilateurSymbol.FALSE); } 
+"false"	   { return symbol(PatateCompilateurSymbol.FALSE); }
 
 "static"  { return symbol(PatateCompilateurSymbol.STATIC); }
 "function"  { return symbol(PatateCompilateurSymbol.FUNCTION); }
@@ -98,27 +158,27 @@ nbv     = 0|[1-9][0-9]*"."[0-9]*
 "private" { return symbol(PatateCompilateurSymbol.PRIVATE); }
 "public"  { return symbol(PatateCompilateurSymbol.PUBLIC); }
 
-"main"  { return symbol(PatateCompilateurSymbol.MAIN); }
-
 /* -------------------------------------------------
         Variables, Entiers
    ------------------------------------------------- */
 
 
-{id}     { return symbol(PatateCompilateurSymbol.ID); }
-{nb}     { return symbol(PatateCompilateurSymbol.NB); }
-{nbv}    { return symbol(PatateCompilateurSymbol.NBV); }
+{id}     { return symbol(PatateCompilateurSymbol.ID, yytext()); }
+{nb}     { return symbol(PatateCompilateurSymbol.NB, Integer.parseInt(yytext())); }
+{nbv}    { return symbol(PatateCompilateurSymbol.NBV, Double.parseDouble(yytext())); }
 
-"//".*    { return symbol(PatateCompilateurSymbol.SINGLESTRING); }
-"/*"([^*]|\*+[^/])*\*+"/" { return symbol(PatateCompilateurSymbol.STRINGS); }
 
  /* -------------------------------------------------
         Caracteres non pris en compte
    ------------------------------------------------- */
 
+/* Comments : Ne pas les prendre */
+"//".*    {}
+"/*"([^*]|\*+[^/])*\*+"/" {}
+
 [\t|\n|\r|\r\n]                  {}
 
-   
+
 /* -------------------------------------------------
         Erreurs
    ------------------------------------------------- */
