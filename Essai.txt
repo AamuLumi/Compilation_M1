@@ -88,10 +88,16 @@ procedure forEachWithLitteralList(){
     show(x[n]);
 }
 
+procedure badArray(){
+  l : list of integer;
+  l = [0, ];
+}
+
 class MyClass {
   static x: integer;
   static y: integer;
   aString : string;
+  test : coucou;
 
   MyClass(){
     aString=null;

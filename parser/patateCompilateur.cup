@@ -10,7 +10,7 @@ import java.io.*;
 
 parser code {:
 	public void syntax_error(Symbol s){
-		System.out.println("compiler has detected a syntax error at line " + s.left + " column " + s.right);
+		System.out.println("[ERROR][SYNTAX] Ligne : " + s.left + " - Colonne : " + s.right);
 	}
 :}
 
@@ -76,6 +76,7 @@ function_declaration ::=
 		{: System.out.println("Fonction \"" + fName + "\" correcte"); :}
 		| FUNCTION ID:fName function_parameters SEMIC
 		{: System.out.println("Fonction \"" + fName + "\" déclarée"); :}
+		| error {: System.out.println("[ERROR][SYNTAX] Erreur dans la fonction"); :}
 		;
 
 function_parameters ::=
@@ -144,6 +145,7 @@ end_statement ::=
 expression_statement ::=
 		SEMIC
 		| expression SEMIC
+		| error SEMIC {: System.out.println("[ERROR][SYNTAX] Erreur dans l'expression"); :}
 		;
 
 expression ::=
@@ -175,6 +177,7 @@ array_of_elements ::=
 elements ::=
 		primary_expression
 		| elements COMMA primary_expression
+		| error {: System.out.println("[ERROR][SYNTAX] Erreur de syntaxe dans le tableau"); :}
 		;
 
 primary_expression ::=
@@ -278,6 +281,7 @@ assignment_operator ::=
 		| AND_ASSIGN
 		| XOR_ASSIGN
 		| OR_ASSIGN
+		| error {: System.out.println("[ERROR][SYNTAX] Opérateur d'assignement inconnu"); :}
 		;
 
 /** Declaration des variables */
@@ -299,6 +303,7 @@ var_declaration_list ::=
 
 type_declaration ::=
 		TYPE ID EQ type SEMIC
+		| error {: System.out.println("[ERROR][SYNTAX] Erreur dans la déclaration de type"); :}
 		;
 
 /** Types simples et complexes */
@@ -306,6 +311,7 @@ type_declaration ::=
 type ::=
 		type_simple
 		| type_complex
+		| error {: System.out.println("[ERROR][SYNTAX] Type inconnu"); :}
 		;
 
 type_simple ::=
