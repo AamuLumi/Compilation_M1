@@ -37,7 +37,7 @@ non terminal program, program_elements;
 non terminal function_parameters, function_declaration, parameters_list;
 non terminal statement, compound_statement, expression_statement, end_statement,
 	if_statement, loop_statement;
-non terminal expression, postfix_expression, primary_expression, unary_expression,
+non terminal expression, postfix_expression,  unary_expression,
 	unary_operator, multiplicative_expression, shift_expression, assignment_operator,
 	additive_expression, relational_expression, and_expression,
 	equality_expression, exclusive_or_expression, inclusive_or_expression, logical_and_expression,
@@ -48,6 +48,7 @@ non terminal type_declaration;
 non terminal type, type_simple, type_complex;
 non terminal class_content, class_list, class_declaration, class_function_declaration,
 	class_var_declaration;
+	non terminal Stree primary_expression;
 
 precedence left ELSE;
 precedence left IF, SEMIC;
@@ -276,19 +277,19 @@ array_of_elements ::=
 		;
 
 elements ::=
-		primary_expression
-		| elements COMMA primary_expression
+		primary_expression :p {: }
+		| elements COMMA primary_expression :p
 		| error {: System.out.println("[ERROR][SYNTAX] Erreur de syntaxe dans le tableau"); :}
 		;
 
 primary_expression ::=
-		ID
-		| NB
-		| NBV
-		| STRING
-		| constant_value
-		| array_of_elements
-		| LPAR expression RPAR
+		ID {: RESULT = new Stree(EnumTag.IDENTIFIER, NULL, NULL, NULL);}
+		| NB {: RESULT = new Stree(EnumTag.INTEGER NULL, NULL, NULL);}
+		| NBV {: RESULT = new Stree(EnumTag.FLOAT, NULL, NULL, NULL);}
+		| STRING {: RESULT = new Stree(EnumTag.STRING, NULL, NULL, NULL);}
+		| constant_value {: RESULT = new Stree(EnumTag.BOOLEAN, NULL, NULL, NULL);} 
+		| array_of_elements {: RESULT = new Stree(EnumTag.LISTOF, NULL, NULL, NULL);}
+		| LPAR expression RPAR  
 		;
 
 unary_expression ::=
