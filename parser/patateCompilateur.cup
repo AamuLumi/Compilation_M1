@@ -1,5 +1,5 @@
 /****************************************************
-* 	ParateCompilateur - Parseur											*
+* 	PatateCompilateur - Parseur											*
 * 	Auteur : Florian Kauder													*
 * 		librement inspiré par la grammaire C					*
 ****************************************************/
@@ -51,6 +51,107 @@ non terminal class_content, class_list, class_declaration, class_function_declar
 
 precedence left ELSE;
 precedence left IF, SEMIC;
+
+public class Environnement{
+	HashTable<string, varInfo> env;
+	
+	public Environnement()
+	{
+		this.env = new HashTable<string, VarInfo>();
+	}
+
+	public HashTable<string, VarInfo> getEnv()
+	{
+		HashTable<string, VarInfo> ht = new HashTable<string, VarInfo>();
+		for (Map.Entry<string, VarInfo> entry : this.contenu.entrySet()) {
+			ht.put(entry.getKey(), entry.getValue());
+		}
+		return hm;
+	}
+
+	public void setEnv(String s, varInfo vi)
+	{
+		this.env.put(s, vi);
+	}
+	
+}
+
+public class StackEnvironnement{
+	Stack<Environnement> s;
+
+	public StackEnvironnement()
+	{
+		this.s = new Stack<Environnement>();
+	}
+
+	public Stack<Environnement> getStack()
+	{
+		return this.s;
+	}
+
+	public void setStack(Stack st)
+	{
+		st = s;
+	}
+
+	public Environnement getTop()
+	{
+		return s.peek();
+	} 
+
+	public void addEnvironnement(Environnement e)
+	{
+		s.push(e);
+	}
+
+	public void deleteEnvironnement()
+	{
+		s.pop();
+	}
+}
+
+public class VarInfo{
+	int taille;
+	string type;
+	int valeur;
+
+	public VarInfo(int t, string ty, int v)
+	{
+		this.taille = t;
+		this.type = ty;
+		this.valeur = v;
+	}
+
+	public int getTaille()
+	{
+		return this.taille;
+	}
+
+	public void setTaille(in t)
+	{
+		this.taille = t;
+	}
+
+	public string getType()
+	{
+		return this.type;
+	}
+
+	public void setType(string ty)
+	{
+		this.type = ty;
+	}
+
+	public int getValeur()
+	{
+		return this.valeur;
+	}
+
+	public void setValeur(int v)
+	{
+		this.valeur = v;
+	}
+}
 
 start with program;
 
