@@ -35,7 +35,7 @@ Basé sur les travaux de Lionel Clément
        target: PatateCompilateur
        ================================= -->
   <target depends="parser, lexer" description="compilation
-       du projet Calculette" name="PatateCompilateur">
+       du projet PatateCompilateur" name="PatateCompilateur">
 
     <mkdir dir="${bin.dir}"/>
     <javac classpath="${lib.dir}/java-cup-11a-runtime.jar" debug="on" destdir="${bin.dir}" srcdir="${src.dir}"/>

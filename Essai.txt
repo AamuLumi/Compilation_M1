@@ -9,6 +9,8 @@ procedure main(argn: integer, argc: list of string)
     x2: float;
   };
 
+  x: string;
+
   x=2;
   y=x+1;
   addOne(x);

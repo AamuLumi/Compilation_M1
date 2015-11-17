@@ -9,9 +9,21 @@ import java.util.Vector;
 import java.io.*;
 
 parser code {:
+	static StackEnvironment s = new StackEnvironment();
+
 	public void syntax_error(Symbol s){
 		System.out.println("[ERROR][SYNTAX] Ligne : " + s.left + " - Colonne : " + s.right);
 	}
+
+	public Symbol scan() throws java.lang.Exception {
+		Symbol cur = getScanner().next_token();
+
+		if (cur.sym == PatateCompilateurSymbol.LACC)
+			s.addEnvironment();
+		else if (cur.sym == PatateCompilateurSymbol.RACC)
+			s.deleteEnvironment();
+    return cur;
+  }
 :}
 
 terminal LPAR, RPAR, SEMIC, PLUS, MULT, LACC, RACC, INC_OP, DEC_OP, AND, MOINS, TILDE, NE, DIV, MOD,
@@ -48,111 +60,10 @@ non terminal type_declaration;
 non terminal type, type_simple, type_complex;
 non terminal class_content, class_list, class_declaration, class_function_declaration,
 	class_var_declaration;
-	non terminal Stree primary_expression;
+	non terminal primary_expression;
 
 precedence left ELSE;
 precedence left IF, SEMIC;
-
-public class Environnement{
-	HashTable<string, varInfo> env;
-	
-	public Environnement()
-	{
-		this.env = new HashTable<string, VarInfo>();
-	}
-
-	public HashTable<string, VarInfo> getEnv()
-	{
-		HashTable<string, VarInfo> ht = new HashTable<string, VarInfo>();
-		for (Map.Entry<string, VarInfo> entry : this.contenu.entrySet()) {
-			ht.put(entry.getKey(), entry.getValue());
-		}
-		return hm;
-	}
-
-	public void setEnv(String s, varInfo vi)
-	{
-		this.env.put(s, vi);
-	}
-	
-}
-
-public class StackEnvironnement{
-	Stack<Environnement> s;
-
-	public StackEnvironnement()
-	{
-		this.s = new Stack<Environnement>();
-	}
-
-	public Stack<Environnement> getStack()
-	{
-		return this.s;
-	}
-
-	public void setStack(Stack st)
-	{
-		st = s;
-	}
-
-	public Environnement getTop()
-	{
-		return s.peek();
-	} 
-
-	public void addEnvironnement(Environnement e)
-	{
-		s.push(e);
-	}
-
-	public void deleteEnvironnement()
-	{
-		s.pop();
-	}
-}
-
-public class VarInfo{
-	int taille;
-	string type;
-	int valeur;
-
-	public VarInfo(int t, string ty, int v)
-	{
-		this.taille = t;
-		this.type = ty;
-		this.valeur = v;
-	}
-
-	public int getTaille()
-	{
-		return this.taille;
-	}
-
-	public void setTaille(in t)
-	{
-		this.taille = t;
-	}
-
-	public string getType()
-	{
-		return this.type;
-	}
-
-	public void setType(string ty)
-	{
-		this.type = ty;
-	}
-
-	public int getValeur()
-	{
-		return this.valeur;
-	}
-
-	public void setValeur(int v)
-	{
-		this.valeur = v;
-	}
-}
 
 start with program;
 
@@ -277,19 +188,22 @@ array_of_elements ::=
 		;
 
 elements ::=
-		primary_expression :p {: }
-		| elements COMMA primary_expression :p
+		primary_expression
+		| elements COMMA primary_expression
 		| error {: System.out.println("[ERROR][SYNTAX] Erreur de syntaxe dans le tableau"); :}
 		;
 
 primary_expression ::=
-		ID {: RESULT = new Stree(EnumTag.IDENTIFIER, NULL, NULL, NULL);}
-		| NB {: RESULT = new Stree(EnumTag.INTEGER NULL, NULL, NULL);}
-		| NBV {: RESULT = new Stree(EnumTag.FLOAT, NULL, NULL, NULL);}
-		| STRING {: RESULT = new Stree(EnumTag.STRING, NULL, NULL, NULL);}
-		| constant_value {: RESULT = new Stree(EnumTag.BOOLEAN, NULL, NULL, NULL);} 
-		| array_of_elements {: RESULT = new Stree(EnumTag.LISTOF, NULL, NULL, NULL);}
-		| LPAR expression RPAR  
+		ID:name {:
+			if (!PatateCompilateurParser.s.existInOneEnvironment((String)name))
+				System.out.println("[ERROR][SEMANT] La variable " + name + " n'existe pas.");
+			:}
+		| NB
+		| NBV
+		| STRING
+		| constant_value
+		| array_of_elements
+		| LPAR expression RPAR
 		;
 
 unary_expression ::=
@@ -393,7 +307,10 @@ var_declaration ::=
 		;
 
 var_and_type ::=
-		ID COLON type
+		ID:name COLON type:type {:
+			if (!PatateCompilateurParser.s.getCurrentEnvironment().addVariable(new Variable((String)name, (Type)type)))
+				System.out.println("[ERROR][SEMANT] Variable déjà existante : " + name);
+			:}
 		;
 
 var_declaration_list ::=
@@ -411,24 +328,24 @@ type_declaration ::=
 /** Types simples et complexes */
 
 type ::=
-		type_simple
-		| type_complex
+		type_simple:type {: RESULT = type;:}
+		| type_complex:type {: RESULT = type;:}
 		| error {: System.out.println("[ERROR][SYNTAX] Type inconnu"); :}
 		;
 
 type_simple ::=
-		INT
-		| CHARACTER
-		| FLOAT
-		|	BOOLEAN
-		| STRING
-		| SINGLEQUOTE ID
+		INT {: RESULT = Type.INT;:}
+		| CHARACTER {: RESULT = Type.CHAR;:}
+		| FLOAT {: RESULT = Type.FLOAT;:}
+		|	BOOLEAN {: RESULT = Type.BOOLEAN;:}
+		| STRING {: RESULT = Type.STRING;:}
+		| SINGLEQUOTE ID:type {: RESULT = type;:}
 		;
 
 type_complex ::=
-		LISTOF type
-		| XOR type
-		| STRUCTURE LACC var_declaration_list RACC
+		LISTOF type:type {: RESULT = new Type("listof", (Type)type);:}
+		| XOR type:type {: RESULT = new Type("pointer", (Type)type);:}
+		| STRUCTURE LACC var_declaration_list RACC {: RESULT = new Type("structure", null);:}
 		| CLASS LACC class_content RACC
 		;
 
