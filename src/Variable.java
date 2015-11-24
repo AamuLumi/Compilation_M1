@@ -1,4 +1,4 @@
-public class Variable{
+public class Variable extends ObjectWithName{
 
   private String name;
   private Type type;

@@ -1,11 +1,9 @@
 public class Environment{
 	private VarTree varRoot;
-	private FunctionTree functionRoot;
 
 	public Environment()
 	{
 		this.varRoot = new VarTree();
-		this.functionRoot = new FunctionTree();
 	}
 
 	public VarTree getVarRoot()
@@ -13,9 +11,18 @@ public class Environment{
 		return varRoot;
 	}
 
-	public boolean addVariable(Variable v){
-		System.out.println("Adding " + v.getName() + " with type " + v.getType());
+	public boolean add(Variable v){
+		//System.out.println("Adding " + v.getName() + " with type " + v.getType());
 		boolean res = VarTree.add(v, this.varRoot);
+		//displayVariableTree(varRoot, 0);
+		//System.out.println("");
+
+		return res;
+	}
+
+	public boolean add(Function f){
+		System.out.println("Adding " + f.getName() + " with type " + f.getArgs());
+		boolean res = VarTree.add(f, this.varRoot);
 		displayVariableTree(varRoot, 0);
 		System.out.println("");
 
@@ -35,6 +42,6 @@ public class Environment{
 	}
 
 	public boolean isDefined(String name){
-		return VarTree.searchVariable(new Variable(name, null), this.varRoot);
+		return VarTree.search(name, this.varRoot);
 	}
 }

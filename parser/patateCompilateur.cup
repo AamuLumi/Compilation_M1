@@ -24,6 +24,28 @@ parser code {:
 			s.deleteEnvironment();
     return cur;
   }
+
+	static Vector<Variable> args = new Vector<Variable>();
+
+	public static void initVectorArgs(){
+		args = new Vector<Variable>();
+	}
+
+	public static void addArg(Variable v){
+		args.add(v);
+	}
+
+	public static Vector<Variable> getArgs(){
+		return args;
+	}
+
+	public static void addFunction(String name){
+		Function f = new Function(name, getArgs());
+		if (!s.getCurrentEnvironment().add(f))
+			System.out.println("[ERROR][SEMANT] Fonction déjà existante : " + name);
+		initVectorArgs();
+	}
+
 :}
 
 terminal LPAR, RPAR, SEMIC, PLUS, MULT, LACC, RACC, INC_OP, DEC_OP, AND, MOINS, TILDE, NE, DIV, MOD,
@@ -72,256 +94,389 @@ program ::=
 		;
 
 program_elements ::=
-		function_declaration
+		function_declaration:fn {: System.out.println(fn);:}
 		| class_declaration
-		| program_elements function_declaration
+		| program_elements function_declaration:fn {: System.out.println(fn);:}
 		| program_elements class_declaration
 		;
 
 /** Déclaration des fonctions */
 
 function_declaration ::=
-		PROCEDURE ID:fName function_parameters compound_statement
-		{: System.out.println("Procédure \"" + fName + "\" correcte"); :}
-		| PROCEDURE ID:fName function_parameters SEMIC
-		{: System.out.println("Procédure \"" + fName + "\" déclarée"); :}
-		| FUNCTION ID:fName function_parameters compound_statement
-		{: System.out.println("Fonction \"" + fName + "\" correcte"); :}
-		| FUNCTION ID:fName function_parameters SEMIC
-		{: System.out.println("Fonction \"" + fName + "\" déclarée"); :}
+		PROCEDURE ID:fName function_parameters:args compound_statement:instructions
+		{: System.out.println("Procédure \"" + fName + "\" correcte");
+			if (instructions instanceof Vector)
+				RESULT = new NodeProcedure((String)fName, (Vector<NodeVar>)args,
+					(Vector<ArbSynt>)instructions);
+			else if (instructions instanceof ArbSynt)
+				RESULT = new NodeProcedure((String)fName, (Vector<NodeVar>)args,
+					(ArbSynt)instructions);
+			:}
+		| PROCEDURE ID:fName function_parameters:args SEMIC
+		{: System.out.println("Procédure \"" + fName + "\" déclarée");
+			:}
+		| FUNCTION ID:fName function_parameters:args compound_statement
+		{: System.out.println("Fonction \"" + fName + "\" correcte");
+			:}
+		| FUNCTION ID:fName function_parameters:args SEMIC
+		{: System.out.println("Fonction \"" + fName + "\" déclarée");
+		:}
 		| error {: System.out.println("[ERROR][SYNTAX] Erreur dans la fonction"); :}
 		;
 
 function_parameters ::=
-		LPAR RPAR
-		| LPAR parameters_list RPAR
+		LPAR RPAR {: RESULT = new Vector<NodeVar>(); :}
+		| LPAR parameters_list:l RPAR {:
+			if (l instanceof Vector)
+				RESULT = l;
+			else {
+				Vector<NodeVar> list = new Vector<NodeVar>();
+				list.add((NodeVar)l);
+				RESULT = list;
+			} :}
 		;
 
 parameters_list ::=
-		var_and_type
-		| parameters_list COMMA var_and_type
+		var_and_type:v {: RESULT = v; :}
+		| parameters_list:list COMMA var_and_type:v {:
+			if (list instanceof Vector){
+				((Vector<NodeVar>)list).add((NodeVar)v);
+				RESULT = list;
+			}
+			else {
+				Vector<NodeVar> l = new Vector<NodeVar>();
+				l.add((NodeVar)v);
+				l.add((NodeVar)list);
+				RESULT = l;
+			}
+		:}
 		;
 
 /* Blocs */
 
 compound_statement ::=
 		LACC RACC
-		| LACC block_item_list RACC
+		| LACC block_item_list:block RACC {: RESULT = block; :}
 		;
 
 block_item_list ::=
-		block_item
-		| block_item_list block_item
+		block_item:item {: RESULT = item;:}
+		| block_item_list:list block_item:item {:
+			if (list instanceof ArbSynt){
+				Vector<ArbSynt> v = new Vector<ArbSynt>();
+				v.add((ArbSynt)list);
+				v.add((ArbSynt)item);
+				RESULT = v;
+			}
+			else if (list instanceof Vector){
+				((Vector<ArbSynt>)list).add((ArbSynt)item);
+				RESULT = list;
+			}
+			:}
 		;
 
 block_item ::=
-		var_declaration
-		| type_declaration
-		| statement
+		var_declaration:v {: RESULT = v;:}
+		| type_declaration:t {: RESULT = t;:}
+		| statement:s {: RESULT = s; :}
 		;
 
 /** Instructions */
 
 statement ::=
-		compound_statement
-		| expression_statement
-		| if_statement
-		| loop_statement
-		| end_statement
+		compound_statement:c {: RESULT = c; :}
+		| expression_statement:e {: RESULT = e; :}
+		| if_statement:i {: RESULT = i; :}
+		| loop_statement:l {: RESULT = l; :}
+		| end_statement:e {: RESULT = e; :}
 		;
 
 /** Boucles */
 
 loop_statement ::=
-		FOREACH ID IN primary_expression statement
-		| WHILE LPAR expression RPAR statement
-		| REPEAT statement WHILE LPAR expression RPAR
+		FOREACH ID:varName IN primary_expression:e statement:st {:
+			RESULT = new NodeLoopStatement((String)varName, (NodeExpression)e,
+				(NodeStatement)st);:}
+		| WHILE LPAR expression:e RPAR statement:st {:
+			RESULT = new NodeLoopStatement((NodeExpression)e, (NodeStatement)st); :}
+		| REPEAT statement:st WHILE LPAR expression:e RPAR {:
+			RESULT = new NodeLoopStatement((NodeStatement)st, (NodeExpression)e); :}
 		;
 
 /** Instruction Si */
 
 if_statement ::=
-		IF LPAR expression RPAR statement
-		| IF LPAR expression RPAR statement ELSE statement
+		IF LPAR expression:e RPAR statement:st {:
+			RESULT = new NodeIfStatement((NodeExpression) e, (NodeStatement) st);:}
+		| IF LPAR expression:e RPAR statement:st ELSE statement:stElse {:
+			RESULT = new NodeIfStatement((NodeExpression) e, (NodeStatement) st, (NodeStatement) stElse);:}
 		;
 
 /** Instructions de fin */
 
 end_statement ::=
-		RETURN expression SEMIC
-		| STOP SEMIC
-		| BREAK SEMIC
+		RETURN expression:e SEMIC {: RESULT = new NodeEndStatement((NodeExpression) e);:}
+		| STOP SEMIC {: RESULT = new NodeEndStatement("stop"); :}
+		| BREAK SEMIC {: RESULT = new NodeEndStatement("break"); :}
 		;
 
 /** Expressions */
 
 expression_statement ::=
 		SEMIC
-		| expression SEMIC
+		| expression:e SEMIC {: RESULT = new NodeExpressionStatement((NodeExpression)e); :}
 		| error SEMIC {: System.out.println("[ERROR][SYNTAX] Erreur dans l'expression"); :}
 		;
 
 expression ::=
- 		assignment_expression
-		| expression COMMA assignment_expression
+ 		assignment_expression:e {: RESULT = e; :}
+		| expression:list COMMA assignment_expression:e {:
+			((NodeExpression)list).addChild((NodeExpression)e); // NOT SURE
+			RESULT = list;
+		:}
 		;
 
 postfix_expression ::=
-		primary_expression
-		| postfix_expression LBRA expression RBRA
-		| postfix_expression LPAR RPAR
-		| postfix_expression LPAR expression RPAR
-		| postfix_expression POINT ID
-		| postfix_expression ARROW ID
-		| postfix_expression INC_OP
-		| postfix_expression DEC_OP
+		primary_expression:e {: RESULT = e; :}
+		| postfix_expression:p LBRA expression:e RBRA {:
+			RESULT = new NodeVarArray((NodeExpression)p, (NodeExpression)e);
+		:}
+		| postfix_expression:p LPAR RPAR {:
+			RESULT = new NodeCall((NodeExpression)p);
+		:}
+		| postfix_expression:p LPAR expression:e RPAR {:
+			RESULT = new NodeCall((NodeExpression)p, (NodeExpression)e);
+		:}
+		| postfix_expression:p POINT ID:name {:
+			RESULT = new NodePostfixExpression(new NodeOperator(EnumTag.POINT),
+				(NodeExpression)p, new NodeVar((String)name));
+		:}
+		| postfix_expression:p ARROW ID:name {:
+			RESULT = new NodePostfixExpression(new NodeOperator(EnumTag.ARROW),
+				(NodeExpression)p, new NodeVar((String)name));
+		:}
+		| postfix_expression:p INC_OP {:
+			RESULT = new NodePostfixExpression(new NodeOperator(EnumTag.INC_OP),
+				(NodeExpression)p);
+		:}
+		| postfix_expression:p DEC_OP {:
+			RESULT = new NodePostfixExpression(new NodeOperator(EnumTag.DEC_OP),
+				(NodeExpression)p);
+		:}
 		;
 
 constant_value ::=
-		TRUE
-		| FALSE
-		| NULL
+		TRUE {: RESULT = new NodeConst(Type.BOOLEAN, true); :}
+		| FALSE {: RESULT = new NodeConst(Type.BOOLEAN, false); :}
+		| NULL {: RESULT = new NodeConst(Type.NULL, null); :}
 		;
 
 array_of_elements ::=
-		LBRA elements RBRA
+		LBRA elements:e RBRA {: RESULT = e; :}
 		;
 
 elements ::=
-		primary_expression
-		| elements COMMA primary_expression
+		primary_expression:e {: RESULT = e; :}
+		| elements:elements COMMA primary_expression:e {:
+			if (elements instanceof NodeArray){
+				((NodeArray)elements).addChild((NodeExpression)e);
+				RESULT = elements;
+			}
+			else if (elements instanceof NodeExpression){
+				NodeArray a = new NodeArray((NodeExpression)elements);
+				a.addChild((NodeExpression)e);
+				RESULT = a;
+			}
+		:}
 		| error {: System.out.println("[ERROR][SYNTAX] Erreur de syntaxe dans le tableau"); :}
 		;
 
 primary_expression ::=
-		ID:name {:
-			if (!PatateCompilateurParser.s.existInOneEnvironment((String)name))
-				System.out.println("[ERROR][SEMANT] La variable " + name + " n'existe pas.");
-			:}
-		| NB
-		| NBV
-		| STRING
-		| constant_value
-		| array_of_elements
-		| LPAR expression RPAR
+		ID:name {: RESULT = new NodeVar((String)name); :}
+		| NB:val {: RESULT = new NodeConst(Type.INT, (int)val); :}
+		| NBV:val {: RESULT = new NodeConst(Type.FLOAT, (float)val); :}
+		| STRING:val {: RESULT = new NodeConst(Type.STRING, (String)val); :}
+		| constant_value:v {: RESULT = v; :}
+		| array_of_elements:a {: RESULT = a; :}
+		| LPAR expression:e RPAR {: RESULT = e; :}
 		;
 
 unary_expression ::=
-		postfix_expression
-		| INC_OP unary_expression
-		| DEC_OP unary_expression
-		| unary_operator unary_expression
+		postfix_expression:e {: RESULT = e; :}
+		| INC_OP unary_expression:e {: RESULT = new NodeUnaryExpression(
+				new NodeOperator(EnumTag.INC_OP), (NodeExpression)e);
+			:}
+		| DEC_OP unary_expression:e {: RESULT = new NodeUnaryExpression(
+				new NodeOperator(EnumTag.DEC_OP), (NodeExpression)e);
+			:}
+		| unary_operator:o unary_expression:e {: RESULT = new NodeUnaryExpression(
+				(NodeOperator)o, (NodeExpression)e);
+			:}
 		;
 
 unary_operator ::=
-		AND
-		| MULT
-		| PLUS
-		| MINUS
-		| TILDE
-		| NE
+		AND {: RESULT = new NodeOperator(EnumTag.AND); :}
+		| MULT {: RESULT = new NodeOperator(EnumTag.MULT); :}
+		| PLUS {: RESULT = new NodeOperator(EnumTag.PLUS); :}
+		| MINUS {: RESULT = new NodeOperator(EnumTag.MINUS); :}
+		| TILDE {: RESULT = new NodeOperator(EnumTag.TILDE); :}
+		| NE {: RESULT = new NodeOperator(EnumTag.NE); :}
 		;
 
 multiplicative_expression ::=
-		unary_expression
-		| multiplicative_expression MULT unary_expression
-		| multiplicative_expression DIV unary_expression
-		| multiplicative_expression MOD unary_expression
+		unary_expression:e {: RESULT = e; :}
+		| multiplicative_expression:m MULT unary_expression:u {:
+				RESULT = new NodeMultExpression(new NodeOperator(EnumTag.MULT),
+					(NodeExpression)m, (NodeExpression)u);
+		:}
+		| multiplicative_expression:m DIV unary_expression:u {:
+				RESULT = new NodeMultExpression(new NodeOperator(EnumTag.DIV),
+					(NodeExpression)m, (NodeExpression)u);
+		:}
+		| multiplicative_expression:m MOD unary_expression:u {:
+				RESULT = new NodeMultExpression(new NodeOperator(EnumTag.MOD),
+					(NodeExpression)m, (NodeExpression)u);
+		:}
 		;
 
 additive_expression ::=
-		multiplicative_expression
-		| additive_expression PLUS multiplicative_expression
-		| additive_expression MINUS multiplicative_expression
+		multiplicative_expression:e {: RESULT = e; :}
+		| additive_expression:a PLUS multiplicative_expression:m {:
+				RESULT = new NodeAddExpression(new NodeOperator(EnumTag.PLUS),
+					(NodeExpression)a, (NodeExpression)m);
+		:}
+		| additive_expression:a MINUS multiplicative_expression:m {:
+				RESULT = new NodeAddExpression(new NodeOperator(EnumTag.MINUS),
+					(NodeExpression)a, (NodeExpression)m);
+		:}
 		;
 
 shift_expression ::=
-		additive_expression
-		| shift_expression LEFT_OP additive_expression
-		| shift_expression RIGHT_OP additive_expression
+		additive_expression:e {: RESULT = e; :}
+		| shift_expression:s LEFT_OP additive_expression:a {:
+				RESULT = new NodeShiftExpression(new NodeOperator(EnumTag.LEFT_OP),
+					(NodeExpression)s, (NodeExpression)a);
+		:}
+		| shift_expression:s RIGHT_OP additive_expression:a {:
+				RESULT = new NodeShiftExpression(new NodeOperator(EnumTag.LEFT_OP),
+					(NodeExpression)s, (NodeExpression)a);
+		:}
 		;
 
 relational_expression ::=
-		shift_expression
-		| relational_expression LEFT shift_expression
-		| relational_expression RIGHT shift_expression
-		| relational_expression LE_OP shift_expression
-		| relational_expression GE_OP shift_expression
+		shift_expression:e {: RESULT = e; :}
+		| relational_expression:r LEFT shift_expression:s {:
+				RESULT = new NodeRelationalExpression(new NodeOperator(EnumTag.LEFT),
+					(NodeExpression)r, (NodeExpression)s);
+		:}
+		| relational_expression:r RIGHT shift_expression:s {:
+				RESULT = new NodeRelationalExpression(new NodeOperator(EnumTag.RIGHT),
+					(NodeExpression)r, (NodeExpression)s);
+		:}
+		| relational_expression:r LE_OP shift_expression:s {:
+				RESULT = new NodeRelationalExpression(new NodeOperator(EnumTag.LE_OP),
+					(NodeExpression)r, (NodeExpression)s);
+		:}
+		| relational_expression:r GE_OP shift_expression:s {:
+				RESULT = new NodeRelationalExpression(new NodeOperator(EnumTag.GE_OP),
+					(NodeExpression)r, (NodeExpression)s);
+		:}
 		;
 
 equality_expression ::=
-		relational_expression
-		| equality_expression EQ_OP relational_expression
-		| equality_expression NE_OP relational_expression
+		relational_expression:e {: RESULT = e; :}
+		| equality_expression:e EQ_OP relational_expression:r {:
+				RESULT = new NodeEqualityExpression(new NodeOperator(EnumTag.EQ_OP),
+					(NodeExpression)e, (NodeExpression)r);
+		:}
+		| equality_expression:e NE_OP relational_expression:r {:
+				RESULT = new NodeEqualityExpression(new NodeOperator(EnumTag.NE_OP),
+					(NodeExpression)e, (NodeExpression)r);
+		:}
 		;
 
 and_expression ::=
-		equality_expression
-		| and_expression AND equality_expression
+		equality_expression:e {: RESULT = e; :}
+		| and_expression:a AND equality_expression:e {:
+				RESULT = new NodeLogicalExpression(new NodeOperator(EnumTag.AND),
+					(NodeExpression)a, (NodeExpression)e);
+		:}
 		;
 
 exclusive_or_expression ::=
-		and_expression
-		| exclusive_or_expression XOR and_expression
+		and_expression:e {: RESULT = e; :}
+		| exclusive_or_expression:e XOR and_expression:a {:
+				RESULT = new NodeLogicalExpression(new NodeOperator(EnumTag.XOR),
+					(NodeExpression)e, (NodeExpression)a);
+		:}
 		;
 
 inclusive_or_expression ::=
-		exclusive_or_expression
-		| inclusive_or_expression OR exclusive_or_expression
+		exclusive_or_expression:e {: RESULT = e; :}
+		| inclusive_or_expression:i OR exclusive_or_expression:e {:
+				RESULT = new NodeLogicalExpression(new NodeOperator(EnumTag.OR),
+					(NodeExpression)i, (NodeExpression)e);
+		:}
 		;
 
 logical_and_expression ::=
-		inclusive_or_expression
-		| logical_and_expression AND_OP inclusive_or_expression
+		inclusive_or_expression:e {: RESULT = e; :}
+		| logical_and_expression:l AND_OP inclusive_or_expression:i {:
+				RESULT = new NodeLogicalExpression(new NodeOperator(EnumTag.AND_OP),
+					(NodeExpression)l, (NodeExpression)i);
+		:}
 		;
 
 logical_or_expression ::=
-		logical_and_expression
-		| logical_or_expression OR_OP logical_and_expression
+		logical_and_expression:e {: RESULT = e; :}
+		| logical_or_expression:lo OR_OP logical_and_expression:la {:
+				RESULT = new NodeLogicalExpression(new NodeOperator(EnumTag.OR_OP),
+					(NodeExpression)lo, (NodeExpression)la);
+		:}
 		;
 
 assignment_expression ::=
-		logical_or_expression
-		| unary_expression assignment_operator assignment_expression
+		logical_or_expression:e {: RESULT = e; :}
+		| unary_expression:u assignment_operator:o assignment_expression:a {:
+				RESULT = new NodeAssignementExpression((NodeOperator)o,
+					(NodeExpression)u, (NodeExpression)a);
+		:}
 		;
 
 assignment_operator ::=
-  	EQ
-		| MUL_ASSIGN
-		| DIV_ASSIGN
-		| MOD_ASSIGN
-		| ADD_ASSIGN
-		| SUB_ASSIGN
-		| LEFT_ASSIGN
-		| RIGHT_ASSIGN
-		| AND_ASSIGN
-		| XOR_ASSIGN
-		| OR_ASSIGN
+  	EQ {: RESULT = new NodeOperator(EnumTag.EQ); :}
+		| MUL_ASSIGN {: RESULT = new NodeOperator(EnumTag.MUL_ASSIGN); :}
+		| DIV_ASSIGN {: RESULT = new NodeOperator(EnumTag.DIV_ASSIGN); :}
+		| MOD_ASSIGN {: RESULT = new NodeOperator(EnumTag.MOD_ASSIGN); :}
+		| ADD_ASSIGN {: RESULT = new NodeOperator(EnumTag.ADD_ASSIGN); :}
+		| SUB_ASSIGN {: RESULT = new NodeOperator(EnumTag.SUB_ASSIGN); :}
+		| AND_ASSIGN {: RESULT = new NodeOperator(EnumTag.AND_ASSIGN); :}
+		| XOR_ASSIGN {: RESULT = new NodeOperator(EnumTag.XOR_ASSIGN); :}
+		| OR_ASSIGN {: RESULT = new NodeOperator(EnumTag.OR_ASSIGN); :}
 		| error {: System.out.println("[ERROR][SYNTAX] Opérateur d'assignement inconnu"); :}
 		;
 
 /** Declaration des variables */
 
 var_declaration ::=
-		var_and_type SEMIC
+		var_and_type:v SEMIC {: RESULT = new NodeDeclaration((NodeVar)v);:}
 		;
 
 var_and_type ::=
 		ID:name COLON type:type {:
-			if (!PatateCompilateurParser.s.getCurrentEnvironment().addVariable(new Variable((String)name, (Type)type)))
-				System.out.println("[ERROR][SEMANT] Variable déjà existante : " + name);
+			RESULT = new NodeVar((String)name, (Type)type);
 			:}
 		;
 
 var_declaration_list ::=
-		var_declaration
-		| var_declaration_list var_declaration
+		var_declaration:decl {: RESULT = decl; :}
+		| var_declaration_list:list var_declaration:decl {: RESULT = decl;:}
 		;
 
 /** Declaration de types */
 
 type_declaration ::=
-		TYPE ID EQ type SEMIC
+		TYPE ID:name EQ type:t SEMIC {: RESULT = new NodeType((String)name, (Type)t);:}
 		| error {: System.out.println("[ERROR][SYNTAX] Erreur dans la déclaration de type"); :}
 		;
 

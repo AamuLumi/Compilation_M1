@@ -7,6 +7,7 @@ public class Type {
 	public static Type BOOLEAN = new Type("bool");
 	public static Type ARRAY = new Type("array");
 	public static Type POINTER = new Type("pointer");
+	public static Type NULL = new Type("null");
 	public static Type ERROR = new Type("error");
 
   private String tag;

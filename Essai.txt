@@ -1,3 +1,7 @@
+procedure addOne(n:integer){
+  return n+1;
+}
+
 procedure main(argn: integer, argc: list of string)
 {
   x: integer;
@@ -13,11 +17,8 @@ procedure main(argn: integer, argc: list of string)
 
   x=2;
   y=x+1;
+  addOne();
   addOne(x);
-}
-
-procedure addOne(n:integer){
-  return x+1;
 }
 
 procedure isPositiveOptimized(n:integer){

@@ -1,17 +1,18 @@
-public class VarTree extends Tree<VarTree>{
+public class VarTree {
 
-  private Variable v;
+  private ObjectWithName v;
+  private VarTree leftChild, rightChild;
 
   public VarTree(){
-    v = new Variable();
+    v = null;
   }
 
-  public VarTree(String name, Type t){
-    v = new Variable(name, t);
+  public VarTree(ObjectWithName o){
+    this.v = o;
   }
 
-  public VarTree(String name, Type t, VarTree leftChild, VarTree rightChild){
-    v = new Variable(name, t);
+  public VarTree(ObjectWithName o, VarTree leftChild, VarTree rightChild){
+    this.v = o;
     this.leftChild = leftChild;
     this.rightChild = rightChild;
   }
@@ -27,18 +28,18 @@ public class VarTree extends Tree<VarTree>{
    * @param   t : the root of tree
    * @return  true if added, false if already exist
    */
-  public static boolean add(Variable v, VarTree t){
-    if (t.getVariable().getName() == null){
-      t.setVariable(v);
+  public static boolean add(ObjectWithName v, VarTree t){
+    if (t.getValue() == null){
+      t.setValue(v);
 
       return true;
     }
-    else if (v.getName().compareTo(t.getVariable().getName()) < 0){
+    else if (v.getName().compareTo(t.getValue().getName()) < 0){
       if (t.getLeftChild() == null)
         t.setLeftChild(new VarTree());
       return VarTree.add(v, t.getLeftChild());
     }
-    else if (v.getName().compareTo(t.getVariable().getName()) > 0){
+    else if (v.getName().compareTo(t.getValue().getName()) > 0){
       if (t.getRightChild() == null)
         t.setRightChild(new VarTree());
       return VarTree.add(v, t.getRightChild());
@@ -47,28 +48,44 @@ public class VarTree extends Tree<VarTree>{
       return false;
   }
 
-  public static boolean searchVariable(Variable v, VarTree n){
-		if (n.getVariable().getName() == null)
+  public static boolean search(String s, VarTree n){
+		if (n.getValue() == null)
 			return false;
 
-		if (n.getVariable().getName().equals(v.getName()))
+		if (n.getValue().getName().equals(s))
 			return true;
 		else if (n.getLeftChild() != null && n.getRightChild() != null)
-			return searchVariable(v, n.getLeftChild()) || searchVariable(v, n.getRightChild());
+			return search(s, n.getLeftChild()) || search(s, n.getRightChild());
 		else if (n.getLeftChild() != null)
-			return searchVariable(v, n.getLeftChild());
+			return search(s, n.getLeftChild());
 		else if (n.getRightChild() != null)
-			return searchVariable(v, n.getRightChild());
+			return search(s, n.getRightChild());
 		else
 			return false;
 	}
 
-  public Variable getVariable(){
+  public ObjectWithName getValue(){
     return this.v;
   }
 
-  public void setVariable(Variable v){
+  public void setValue(ObjectWithName v){
     this.v = v;
+  }
+
+  public VarTree getLeftChild(){
+    return leftChild;
+  }
+
+  public void setLeftChild(VarTree v){
+    this.leftChild = v;
+  }
+
+  public VarTree getRightChild(){
+    return rightChild;
+  }
+
+  public void setRightChild(VarTree v){
+    this.rightChild = v;
   }
 
 }

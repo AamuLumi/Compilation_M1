@@ -1,6 +1,6 @@
 import java.util.Vector;
 
-public class Function{
+public class Function extends ObjectWithName{
 
   public String name;
   public Vector<Variable> args;

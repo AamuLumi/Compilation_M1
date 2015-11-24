@@ -4,8 +4,10 @@ public enum EnumTag {
     
     NE ("!"), 
     AND ("&"),
+    OR ("|"),
     AND_OP ("&&"), 
-    OR ("||"), 
+    OR_OP ("||"), 
+    XOR ("^"),
 
     LEFT ("<"), 
     RIGHT (">"), 
@@ -23,6 +25,7 @@ public enum EnumTag {
     MOD_ASSIGN ("%="),
     AND_ASSIGN ("&="),
     XOR_ASSIGN ("^="),
+    OR_ASSIGN ("|="),
 
 
     PLUS ("+"), 
@@ -50,9 +53,17 @@ public enum EnumTag {
 
 
     EQ ("="), 
-    IF ("IF"), 
+    IF ("IF"),
+    IFELSE ("IFELSE"),
     THENELSE ("THENELSE"), 
-    WHILE ("WHILE"), 
+    WHILE ("WHILE"),
+    RETURN ("RETURN"),
+    STOP ("STOP"),
+    BREAK ("BREAK"),
+    FOREACH ("FOREACH"),
+    REPEAT ("REPEAT"),
+    
+    BLOCK ("BLOCK"),
 
     LISTOF("list of"),
     SUCC("SUCC"),
@@ -64,7 +75,26 @@ public enum EnumTag {
     STRING("STRING"),
     BOOLEAN("BOOLEAN"),
     TYPE ("TYPE"),
-    PROCEDURE ("PROCEDURE");
+    PROCEDURE ("PROCEDURE"),
+    
+    STATEMENT ("STATEMENT"),
+    EXPRESSION ("EXPRESSION"),
+    EXPRESSION_STATEMENT ("EXPRESSION_STATEMENT"),
+    MULT_EXPRESSION ("MULT_EXPRESSION"),
+    ADD_EXPRESSION ("ADD_EXPRESSION"),
+    SHIFT_EXPRESSION ("SHIFT_EXPRESSION"),
+    RELATIONAL_EXPRESSION ("RELATIONAL_EXPRESSION"),
+    EQUALITY_EXPRESSION ("EQUALITY_EXPRESSION"),
+    LOGICAL_EXPRESSION ("LOGICAL_EXPRESSION"),
+    ASSIGNEMENT_EXPRESSION ("ASSIGNEMENT_EXPRESSION"),
+    POSTFIX_EXPRESSION ("POSTFIX_EXPRESSION"),
+    
+    ARRAY ("ARRAY"),
+    DECLARATION("DECLARATION"),
+    VAR("VARIABLE"),
+    VAR_ARRAY ("VAR_ARRAY"),
+    CALL ("CALL"),
+    CONST("CONSTANT");
 
 
     private final String tag;
